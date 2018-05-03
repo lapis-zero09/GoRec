@@ -12,14 +12,6 @@ type Encountered struct {
 	uniqueItem []int
 }
 
-func (data_df DataFrame) TakeCol(colidx int) ([][]int, error) {
-	t := [][]int{}
-	if colidx < 0 || len(data_df) < colidx {
-		return nil, fmt.Errorf("column index is invalid value!")
-	}
-	return t, nil
-}
-
 func CountTrueSize(bool_arr []bool) int {
 	var trueSize int
 	for _, b := range bool_arr {
@@ -68,17 +60,6 @@ func (data_df DataFrame) ReturnUniqueSize(encountered Encountered) ([]int, Encou
 
 func MakeUserItemMatrix(d [][]int) (DataFrame, error) {
 	var data DataFrame = DataFrame(d)
-
-	// user_id, err := data.TakeCol(0)
-	// if err != nil {
-	// 	fmt.Errorf("something went wrong in TakeCol")
-	// }
-	// item_id, err := data.TakeCol(1)
-	// if err != nil {
-	// 	fmt.Errorf("something went wrong in TakeCol")
-	// }
-	// fmt.Println(user_id[0], item_id[0])
-
 	encountered := Encountered{}
 	uniqueSize, encountered := data.ReturnUniqueSize(encountered)
 	uniqueUserSize, uniqueItemSize := uniqueSize[0], uniqueSize[1]
@@ -87,13 +68,6 @@ func MakeUserItemMatrix(d [][]int) (DataFrame, error) {
 	for i := range df {
 		df[i] = make([]int, uniqueItemSize)
 	}
-
-	// f := make(DataFrame, 5)
-	// for i := range f {
-	// 	f[i] = make([]int, 3)
-	// }
-	// fmt.Println(f.shape())
-	// fmt.Println(df[0])
 
 	for _, val := range data {
 		user_id, err := find(encountered.uniqueUser, val[0])
@@ -106,6 +80,7 @@ func MakeUserItemMatrix(d [][]int) (DataFrame, error) {
 		}
 		df[user_id][item_id] = val[2]
 	}
+	fmt.Println("UserSize ItemSize")
 	fmt.Println(df.shape())
 	return df, nil
 }
