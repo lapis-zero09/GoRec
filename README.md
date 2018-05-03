@@ -6,7 +6,7 @@
 - User base
     - Pearson Coef
 
-### input data
+## input data
 
 
 ```
@@ -18,24 +18,28 @@ user_id, item_id, rating
 ```
 
 
-### Example
+## Example
+
+### Download Data
 
 ```sh
 $ cd gorec/src/data
 $ sh ./download_data.sh
 ```
 
+### Run App
 ```sh
 $ cd gorec/src
 $ go run main.go
 ```
 
+### Output
 <img src="img/sim.png">
 
 
----
+### change main.go
 
-change main.go
+You can change some parameter for getting similar user.
 
 ```go
 ~~~
