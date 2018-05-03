@@ -20,8 +20,25 @@ user_id, item_id, rating
 
 ### Example
 
-main.go
+```sh
+$ cd gorec/src/data
+$ sh ./download_data.sh
+```
+
+```sh
+$ cd gorec/src
+$ go run main.go
+```
+
+<img src="img/sim.png">
+
+
+---
+
+change main.go
 
 ```go
-
+~~~
+MostSimilarUser(encountered, userItemMatrix, userId, similarSize)
+~~~
 ```
