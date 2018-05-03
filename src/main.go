@@ -7,8 +7,14 @@ import (
 	"io"
 	"math"
 	"os"
+	"sort"
 	"strconv"
 )
+
+type Encountered struct {
+	UniqueUser []int
+	UniqueItem []int
+}
 
 func StrsliceToIntslice(string_slice []string) []int {
 	int_array := make([]int, cap(string_slice))
@@ -86,9 +92,9 @@ func SumSquad(arr []float64) float64 {
 	return res
 }
 
-func Pearson(userItemMatrix [][]int, key1, key2 int) (float64, error) {
-	u_diff := SubMean(userItemMatrix[key1])
-	v_diff := SubMean(userItemMatrix[key2])
+func Pearson(userVec1, userVec2 []int) (float64, error) {
+	u_diff := SubMean(userVec1)
+	v_diff := SubMean(userVec2)
 	numerator, err := Dot(u_diff, v_diff)
 	if err != nil {
 		return 0.0, err
@@ -97,13 +103,49 @@ func Pearson(userItemMatrix [][]int, key1, key2 int) (float64, error) {
 	return (numerator / deliminator), nil
 }
 
-func TakeCol(data [][]int, colidx int) ([][]int, error) {
-	t := [][]int{}
-	if colidx < 0 || len(data) < colidx {
-		return nil, fmt.Errorf("column index is invalid value!")
+func MostSimilarUser(encountered preprocessing.Encountered, userItemMatrix [][]int, userId, similarSize int) {
+	userSize := len(userItemMatrix)
+	userSimMat := make([][]float64, userSize)
+	for i := 0; i < userSize; i++ {
+		userSimMat[i] = make([]float64, userSize)
 	}
-	return t, nil
+
+	for i := 0; i < userSize; i++ {
+		for j := userSize - 1; j > i; j-- {
+			pearconCoef, err := Pearson(userItemMatrix[i], userItemMatrix[j])
+			if err != nil {
+				fmt.Println(err)
+				break
+			}
+			userSimMat[i][j] = pearconCoef
+			userSimMat[j][i] = pearconCoef
+		}
+	}
+
+	userSimVector := userSimMat[userId]
+	sortedUserSimVector := make([]float64, len(userSimVector))
+	copy(sortedUserSimVector, userSimVector)
+	sort.Sort(sort.Reverse(sort.Float64Slice(sortedUserSimVector)))
+
+	fmt.Println("rank userId similarity")
+	rank := 1
+	for i, sim := range userSimVector {
+		for _, sortedSim := range sortedUserSimVector[:similarSize] {
+			if sim == sortedSim {
+				fmt.Println(rank, encountered.UniqueUser[i], sim)
+				rank++
+			}
+		}
+	}
 }
+
+// func TakeCol(data [][]int, colidx int) ([][]int, error) {
+// 	t := [][]int{}
+// 	if colidx < 0 || len(data) < colidx {
+// 		return nil, fmt.Errorf("column index is invalid value!")
+// 	}
+// 	return t, nil
+// }
 
 func main() {
 	data, err := ReadFileToData("./data/ml-100k/u.data")
@@ -111,14 +153,11 @@ func main() {
 		fmt.Println(err)
 	}
 
-	userItemMatrix, err := preprocessing.MakeUserItemMatrix(data)
+	encountered, userItemMatrix, err := preprocessing.MakeUserItemMatrix(data)
 	if err != nil {
 		fmt.Println(err)
 	}
-	pearconCoef, err := Pearson(userItemMatrix, 0, 1)
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println(pearconCoef)
 
+	MostSimilarUser(encountered, userItemMatrix, 941, 3)
+	MostSimilarUser(encountered, userItemMatrix, 123, 10)
 }

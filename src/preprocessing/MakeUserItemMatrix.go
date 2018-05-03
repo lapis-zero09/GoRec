@@ -8,8 +8,8 @@ import (
 type DataFrame [][]int
 
 type Encountered struct {
-	uniqueUser []int
-	uniqueItem []int
+	UniqueUser []int
+	UniqueItem []int
 }
 
 func CountTrueSize(bool_arr []bool) int {
@@ -43,44 +43,45 @@ func (data_df DataFrame) ReturnUniqueSize(encountered Encountered) ([]int, Encou
 		// user
 		if !user[val[0]] {
 			user[val[0]] = true
-			encountered.uniqueUser = append(encountered.uniqueUser, val[0])
+			encountered.UniqueUser = append(encountered.UniqueUser, val[0])
 		}
 
 		// item
 		if !item[val[1]] {
 			item[val[1]] = true
-			encountered.uniqueItem = append(encountered.uniqueItem, val[1])
+			encountered.UniqueItem = append(encountered.UniqueItem, val[1])
 		}
 	}
-	sort.Ints(encountered.uniqueUser)
-	sort.Ints(encountered.uniqueItem)
+	sort.Ints(encountered.UniqueUser)
+	sort.Ints(encountered.UniqueItem)
 	uniqueSize := []int{CountTrueSize(user), CountTrueSize(item)}
 	return uniqueSize, encountered
 }
 
-func MakeUserItemMatrix(d [][]int) (DataFrame, error) {
+func MakeUserItemMatrix(d [][]int) (Encountered, DataFrame, error) {
 	var data DataFrame = DataFrame(d)
 	encountered := Encountered{}
 	uniqueSize, encountered := data.ReturnUniqueSize(encountered)
-	uniqueUserSize, uniqueItemSize := uniqueSize[0], uniqueSize[1]
+	UniqueUserSize, UniqueItemSize := uniqueSize[0], uniqueSize[1]
 
-	df := make(DataFrame, uniqueUserSize)
+	df := make(DataFrame, UniqueUserSize)
 	for i := range df {
-		df[i] = make([]int, uniqueItemSize)
+		df[i] = make([]int, UniqueItemSize)
 	}
 
 	for _, val := range data {
-		user_id, err := find(encountered.uniqueUser, val[0])
+		user_id, err := find(encountered.UniqueUser, val[0])
 		if err != nil {
 			fmt.Println(err)
 		}
-		item_id, err := find(encountered.uniqueItem, val[1])
+		item_id, err := find(encountered.UniqueItem, val[1])
 		if err != nil {
 			fmt.Println(err)
 		}
 		df[user_id][item_id] = val[2]
 	}
-	fmt.Println("UserSize ItemSize")
+	fmt.Println("UserSize  ItemSize")
 	fmt.Println(df.shape())
-	return df, nil
+	fmt.Println("-----------------------------")
+	return encountered, df, nil
 }
