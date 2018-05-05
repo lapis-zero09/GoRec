@@ -211,11 +211,11 @@ func MostSimilarUser(encountered preprocessing.Encountered, userSimMat [][]float
 }
 
 // func TakeCol(data [][]int, colidx int) ([][]int, error) {
-// 	t := [][]int{}
-// 	if colidx < 0 || len(data) < colidx {
-// 		return nil, fmt.Errorf("column index is invalid value!")
-// 	}
-// 	return t, nil
+//     t := [][]int{}
+//     if colidx < 0 || len(data) < colidx {
+//         return nil, fmt.Errorf("column index is invalid value!")
+//     }
+//     return t, nil
 // }
 
 func main() {

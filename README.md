@@ -12,8 +12,6 @@
 
 ## input data
 
-ex) http://files.grouplens.org/papers/ml-100k.zip
-
 ```
 user_id, item_id, rating
 1, 2, 4
@@ -21,6 +19,9 @@ user_id, item_id, rating
 21, 63, 2
 ...
 ```
+ex) http://files.grouplens.org/papers/ml-100k.zip
+
+<img src="img/data.png">
 
 
 ## Example
