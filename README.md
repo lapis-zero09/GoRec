@@ -5,9 +5,14 @@
 
 - User base
     - Pearson Coef
+    - Cosine
+    - Jaccard
+    - Dice
+    - Simpson
 
 ## input data
 
+ex) http://files.grouplens.org/papers/ml-100k.zip
 
 ```
 user_id, item_id, rating
@@ -19,6 +24,8 @@ user_id, item_id, rating
 
 
 ## Example
+
+http://files.grouplens.org/papers/ml-100k.zip
 
 ### Download Data
 
@@ -42,7 +49,6 @@ $ go run main.go
 You can change some parameter for getting similar user.
 
 ```go
-~~~
-MostSimilarUser(encountered, userItemMatrix, userId, similarSize)
-~~~
+userSimMatrix := MakesimilarityMatrix(userItemMatrix, method)
+MostSimilarUser(encountered, userSimMatrix, userId, similarSize)
 ```

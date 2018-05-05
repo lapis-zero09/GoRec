@@ -63,7 +63,7 @@ func ReadFileToData(filename string) ([][]int, error) {
 	return data, nil
 }
 
-func Mean(arr []int) float64 {
+func Mean(arr []float64) float64 {
 	sum := 0.0
 	for _, val := range arr {
 		sum += float64(val)
@@ -71,11 +71,11 @@ func Mean(arr []int) float64 {
 	return sum / float64(len(arr))
 }
 
-func SubMean(arr []int) []float64 {
+func SubMean(arr []float64) []float64 {
 	mean := Mean(arr)
 	diff_arr := make([]float64, len(arr))
 	for i, val := range arr {
-		diff_arr[i] = float64(val) - mean
+		diff_arr[i] = val - mean
 	}
 	return diff_arr
 }
@@ -90,6 +90,14 @@ func Dot(u, v []float64) (float64, error) {
 		res += float64(u[i]) * float64(v[i])
 	}
 	return res, nil
+}
+
+func Sum(arr []float64) float64 {
+	var res float64
+	for _, val := range arr {
+		res += val
+	}
+	return res
 }
 
 func SumSquad(arr []float64) float64 {
@@ -111,9 +119,47 @@ func Cosine(userVec1, userVec2 []int) (float64, error) {
 	return (numerator / deliminator), nil
 }
 
+func Jaccard(userVec1, userVec2 []int) (float64, error) {
+	tmpUserVec1 := IntsliceToFloatslice(userVec1)
+	tmpUserVec2 := IntsliceToFloatslice(userVec2)
+	numerator, err := Dot(tmpUserVec1, tmpUserVec2)
+	if err != nil {
+		return 0.0, err
+	}
+	deliminator := (Sum(tmpUserVec1) + Sum(tmpUserVec2)) - numerator
+	return (numerator / deliminator), nil
+}
+
+func Dice(userVec1, userVec2 []int) (float64, error) {
+	tmpUserVec1 := IntsliceToFloatslice(userVec1)
+	tmpUserVec2 := IntsliceToFloatslice(userVec2)
+	numerator, err := Dot(tmpUserVec1, tmpUserVec2)
+	if err != nil {
+		return 0.0, err
+	}
+	deliminator := Sum(tmpUserVec1) + Sum(tmpUserVec2)
+	return (2 * numerator / deliminator), nil
+}
+
+func Simpson(userVec1, userVec2 []int) (float64, error) {
+	tmpUserVec1 := IntsliceToFloatslice(userVec1)
+	tmpUserVec2 := IntsliceToFloatslice(userVec2)
+	numerator, err := Dot(tmpUserVec1, tmpUserVec2)
+	if err != nil {
+		return 0.0, err
+	}
+	sum := Sum(tmpUserVec1)
+	if tmpSum := Sum(tmpUserVec2); sum > tmpSum {
+		return (numerator / tmpSum), nil
+	}
+	return (numerator / sum), nil
+}
+
 func Pearson(userVec1, userVec2 []int) (float64, error) {
-	u_diff := SubMean(userVec1)
-	v_diff := SubMean(userVec2)
+	tmpUserVec1 := IntsliceToFloatslice(userVec1)
+	tmpUserVec2 := IntsliceToFloatslice(userVec2)
+	u_diff := SubMean(tmpUserVec1)
+	v_diff := SubMean(tmpUserVec2)
 	numerator, err := Dot(u_diff, v_diff)
 	if err != nil {
 		return 0.0, err
@@ -122,7 +168,7 @@ func Pearson(userVec1, userVec2 []int) (float64, error) {
 	return (numerator / deliminator), nil
 }
 
-func MakeSimiralityMatrix(userItemMatrix [][]int, method func([]int, []int) (float64, error)) [][]float64 {
+func MakeSimilarityMatrix(userItemMatrix [][]int, method func([]int, []int) (float64, error)) [][]float64 {
 	userSize := len(userItemMatrix)
 	userSimMat := make([][]float64, userSize)
 	for i := 0; i < userSize; i++ {
@@ -131,19 +177,6 @@ func MakeSimiralityMatrix(userItemMatrix [][]int, method func([]int, []int) (flo
 
 	for i := 0; i < userSize; i++ {
 		for j := userSize - 1; j > i; j-- {
-			// if method == "pearson" {
-			// sim, err := Pearson(userItemMatrix[i], userItemMatrix[j])
-			// 	if err != nil {
-			// 		fmt.Println(err)
-			// 		break
-			// 	}
-			// } else if method == "cosine" {
-			// 	sim, err := Cosine(userItemMatrix[i], userItemMatrix[j])
-			// 	if err != nil {
-			// 		fmt.Println(err)
-			// 		break
-			// 	}
-			// }
 			sim, err := method(userItemMatrix[i], userItemMatrix[j])
 			if err != nil {
 				fmt.Println(err)
@@ -168,7 +201,6 @@ func MostSimilarUser(encountered preprocessing.Encountered, userSimMat [][]float
 	rank := 1
 	for _, sortedSim := range sortedUserSimVector[:similarSize] {
 		for i, sim := range userSimVector {
-			// fmt.Println(sortedSim)
 			if sim == sortedSim {
 				fmt.Printf(" %d  \t %d  \t %f\n", rank, encountered.UniqueUser[i], sim)
 				rank++
@@ -201,14 +233,14 @@ func main() {
 	fmt.Println("")
 	fmt.Println("Pearson")
 	fmt.Println("-----------------------------")
-	userSimMat := MakeSimiralityMatrix(userItemMatrix, Pearson)
-	MostSimilarUser(encountered, userSimMat, 941, 3)
-	MostSimilarUser(encountered, userSimMat, 356, 5)
+	userSimMat := MakeSimilarityMatrix(userItemMatrix, Pearson)
+	MostSimilarUser(encountered, userSimMat, 941, 2)
+	MostSimilarUser(encountered, userSimMat, 356, 3)
 
 	fmt.Println("")
 	fmt.Println("Cosine")
 	fmt.Println("-----------------------------")
-	userSimMat = MakeSimiralityMatrix(userItemMatrix, Cosine)
-	MostSimilarUser(encountered, userSimMat, 941, 3)
-	MostSimilarUser(encountered, userSimMat, 356, 5)
+	userSimMat = MakeSimilarityMatrix(userItemMatrix, Cosine)
+	MostSimilarUser(encountered, userSimMat, 941, 2)
+	MostSimilarUser(encountered, userSimMat, 356, 3)
 }
