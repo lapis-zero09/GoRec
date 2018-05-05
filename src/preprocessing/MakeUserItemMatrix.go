@@ -80,8 +80,10 @@ func MakeUserItemMatrix(d [][]int) (Encountered, DataFrame, error) {
 		}
 		df[user_id][item_id] = val[2]
 	}
-	fmt.Println("UserSize  ItemSize")
-	fmt.Println(df.shape())
+	fmt.Println("UserSize\tItemSize")
+	fmt.Println("-----------------------------")
+	l, m := df.shape()
+	fmt.Printf(" %d \t %d \n", l, m)
 	fmt.Println("-----------------------------")
 	return encountered, df, nil
 }

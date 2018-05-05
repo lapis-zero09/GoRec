@@ -28,16 +28,12 @@ func StrsliceToIntslice(string_slice []string) []int {
 	return int_array
 }
 
-func StrsliceToFloatslice(string_slice []int) []float64 {
-	int_array := make([]int, cap(string_slice))
-	for i, val := range string_slice {
-		val, err := float64(val)
-		if err != nil {
-			fmt.Println(err)
-		}
-		int_array[i] = val
+func IntsliceToFloatslice(int_slice []int) []float64 {
+	float_array := make([]float64, cap(int_slice))
+	for i, val := range int_slice {
+		float_array[i] = float64(val)
 	}
-	return int_array
+	return float_array
 }
 
 func ReadFileToData(filename string) ([][]int, error) {
@@ -105,11 +101,13 @@ func SumSquad(arr []float64) float64 {
 }
 
 func Cosine(userVec1, userVec2 []int) (float64, error) {
-	numerator, err := Dot(userVec1, userVec2)
+	tmpUserVec1 := IntsliceToFloatslice(userVec1)
+	tmpUserVec2 := IntsliceToFloatslice(userVec2)
+	numerator, err := Dot(tmpUserVec1, tmpUserVec2)
 	if err != nil {
 		return 0.0, err
 	}
-	deliminator := math.Sqrt(SumSquad(userVec1)) * math.Sqrt(SumSquad(userVec2))
+	deliminator := math.Sqrt(SumSquad(tmpUserVec1)) * math.Sqrt(SumSquad(tmpUserVec2))
 	return (numerator / deliminator), nil
 }
 
@@ -124,7 +122,7 @@ func Pearson(userVec1, userVec2 []int) (float64, error) {
 	return (numerator / deliminator), nil
 }
 
-func MostSimilarUser(encountered preprocessing.Encountered, userItemMatrix [][]int, userId, similarSize int, method string) {
+func MakeSimiralityMatrix(userItemMatrix [][]int, method func([]int, []int) (float64, error)) [][]float64 {
 	userSize := len(userItemMatrix)
 	userSimMat := make([][]float64, userSize)
 	for i := 0; i < userSize; i++ {
@@ -133,39 +131,51 @@ func MostSimilarUser(encountered preprocessing.Encountered, userItemMatrix [][]i
 
 	for i := 0; i < userSize; i++ {
 		for j := userSize - 1; j > i; j-- {
-			if method == "pearson" {
-				sim, err := Pearson(userItemMatrix[i], userItemMatrix[j])
-				if err != nil {
-					fmt.Println(err)
-					break
-				}
-			} else if method == "cosine" {
-				sim, err := Cosine(userItemMatrix[i], userItemMatrix[j])
-				if err != nil {
-					fmt.Println(err)
-					break
-				}
+			// if method == "pearson" {
+			// sim, err := Pearson(userItemMatrix[i], userItemMatrix[j])
+			// 	if err != nil {
+			// 		fmt.Println(err)
+			// 		break
+			// 	}
+			// } else if method == "cosine" {
+			// 	sim, err := Cosine(userItemMatrix[i], userItemMatrix[j])
+			// 	if err != nil {
+			// 		fmt.Println(err)
+			// 		break
+			// 	}
+			// }
+			sim, err := method(userItemMatrix[i], userItemMatrix[j])
+			if err != nil {
+				fmt.Println(err)
+				break
 			}
 			userSimMat[i][j] = sim
 			userSimMat[j][i] = sim
 		}
 	}
+	return userSimMat
+}
 
+func MostSimilarUser(encountered preprocessing.Encountered, userSimMat [][]float64, userId, similarSize int) {
 	userSimVector := userSimMat[userId]
 	sortedUserSimVector := make([]float64, len(userSimVector))
 	copy(sortedUserSimVector, userSimVector)
 	sort.Sort(sort.Reverse(sort.Float64Slice(sortedUserSimVector)))
 
-	fmt.Println("rank userId similarity")
+	fmt.Printf("mainUserId = %d\n", userId)
+	fmt.Println("rank\tuserId\tsimilarity")
+	fmt.Println("-----------------------------")
 	rank := 1
-	for i, sim := range userSimVector {
-		for _, sortedSim := range sortedUserSimVector[:similarSize] {
+	for _, sortedSim := range sortedUserSimVector[:similarSize] {
+		for i, sim := range userSimVector {
+			// fmt.Println(sortedSim)
 			if sim == sortedSim {
-				fmt.Println(rank, encountered.UniqueUser[i], sim)
+				fmt.Printf(" %d  \t %d  \t %f\n", rank, encountered.UniqueUser[i], sim)
 				rank++
 			}
 		}
 	}
+	fmt.Println("-----------------------------")
 }
 
 // func TakeCol(data [][]int, colidx int) ([][]int, error) {
@@ -187,6 +197,18 @@ func main() {
 		fmt.Println(err)
 	}
 
-	MostSimilarUser(encountered, userItemMatrix, 941, 3, "pearson")
-	MostSimilarUser(encountered, userItemMatrix, 941, 3, "cosine")
+	// fmt.Println(encountered, userItemMatrix)
+	fmt.Println("")
+	fmt.Println("Pearson")
+	fmt.Println("-----------------------------")
+	userSimMat := MakeSimiralityMatrix(userItemMatrix, Pearson)
+	MostSimilarUser(encountered, userSimMat, 941, 3)
+	MostSimilarUser(encountered, userSimMat, 356, 5)
+
+	fmt.Println("")
+	fmt.Println("Cosine")
+	fmt.Println("-----------------------------")
+	userSimMat = MakeSimiralityMatrix(userItemMatrix, Cosine)
+	MostSimilarUser(encountered, userSimMat, 941, 3)
+	MostSimilarUser(encountered, userSimMat, 356, 5)
 }
