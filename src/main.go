@@ -28,6 +28,18 @@ func StrsliceToIntslice(string_slice []string) []int {
 	return int_array
 }
 
+func StrsliceToFloatslice(string_slice []int) []float64 {
+	int_array := make([]int, cap(string_slice))
+	for i, val := range string_slice {
+		val, err := float64(val)
+		if err != nil {
+			fmt.Println(err)
+		}
+		int_array[i] = val
+	}
+	return int_array
+}
+
 func ReadFileToData(filename string) ([][]int, error) {
 	file, err := os.Open(filename)
 	if err != nil {
@@ -92,6 +104,15 @@ func SumSquad(arr []float64) float64 {
 	return res
 }
 
+func Cosine(userVec1, userVec2 []int) (float64, error) {
+	numerator, err := Dot(userVec1, userVec2)
+	if err != nil {
+		return 0.0, err
+	}
+	deliminator := math.Sqrt(SumSquad(userVec1)) * math.Sqrt(SumSquad(userVec2))
+	return (numerator / deliminator), nil
+}
+
 func Pearson(userVec1, userVec2 []int) (float64, error) {
 	u_diff := SubMean(userVec1)
 	v_diff := SubMean(userVec2)
@@ -103,7 +124,7 @@ func Pearson(userVec1, userVec2 []int) (float64, error) {
 	return (numerator / deliminator), nil
 }
 
-func MostSimilarUser(encountered preprocessing.Encountered, userItemMatrix [][]int, userId, similarSize int) {
+func MostSimilarUser(encountered preprocessing.Encountered, userItemMatrix [][]int, userId, similarSize int, method string) {
 	userSize := len(userItemMatrix)
 	userSimMat := make([][]float64, userSize)
 	for i := 0; i < userSize; i++ {
@@ -112,13 +133,21 @@ func MostSimilarUser(encountered preprocessing.Encountered, userItemMatrix [][]i
 
 	for i := 0; i < userSize; i++ {
 		for j := userSize - 1; j > i; j-- {
-			pearconCoef, err := Pearson(userItemMatrix[i], userItemMatrix[j])
-			if err != nil {
-				fmt.Println(err)
-				break
+			if method == "pearson" {
+				sim, err := Pearson(userItemMatrix[i], userItemMatrix[j])
+				if err != nil {
+					fmt.Println(err)
+					break
+				}
+			} else if method == "cosine" {
+				sim, err := Cosine(userItemMatrix[i], userItemMatrix[j])
+				if err != nil {
+					fmt.Println(err)
+					break
+				}
 			}
-			userSimMat[i][j] = pearconCoef
-			userSimMat[j][i] = pearconCoef
+			userSimMat[i][j] = sim
+			userSimMat[j][i] = sim
 		}
 	}
 
@@ -158,6 +187,6 @@ func main() {
 		fmt.Println(err)
 	}
 
-	MostSimilarUser(encountered, userItemMatrix, 941, 3)
-	MostSimilarUser(encountered, userItemMatrix, 123, 10)
+	MostSimilarUser(encountered, userItemMatrix, 941, 3, "pearson")
+	MostSimilarUser(encountered, userItemMatrix, 941, 3, "cosine")
 }
