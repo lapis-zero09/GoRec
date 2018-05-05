@@ -3,9 +3,10 @@
 
 ## Methods
 
-- User base
-    - Pearson Coef
+- User/Item base
+    - Pearson
     - Cosine
+    - Adjusted Cosine
     - Jaccard
     - Dice
     - Simpson
@@ -47,9 +48,14 @@ $ go run main.go
 
 ### change main.go
 
-You can change some parameter for getting similar user.
+You can change some parameter for getting similar user/item.
 
 ```go
-userSimMatrix := MakesimilarityMatrix(userItemMatrix, method)
-MostSimilarUser(encountered, userSimMatrix, userId, similarSize)
+// user
+simMatrix := MakeSimilarityMatrix(userItemMatrix, method, userFlag=true)
+MostSimilar(encountered.UniqueUser, simMatrix, userId, similarSize)
+
+// item
+simMatrix := MakeSimilarityMatrix(userItemMatrix, method, userFlag=false)
+MostSimilar(encountered.UniqueItem, simMatrix, itemId, similarSize)
 ```
