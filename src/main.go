@@ -1,9 +1,9 @@
 package main
 
 import (
+	"./preprocessing"
 	"encoding/csv"
 	"fmt"
-	"gorec/src/preprocessing"
 	"io"
 	"math"
 	"os"
@@ -298,6 +298,7 @@ func main() {
 
 	fmt.Println("")
 	fmt.Println("+++User Simlarity+++")
+
 	fmt.Println("")
 	fmt.Println("Pearson")
 	fmt.Println("-----------------------------")
@@ -305,35 +306,36 @@ func main() {
 	MostSimilar(encountered.UniqueUser, simMat, 941, 2)
 	MostSimilar(encountered.UniqueUser, simMat, 356, 3)
 
-	fmt.Println("")
-	fmt.Println("Cosine")
-	fmt.Println("-----------------------------")
-	simMat = MakeSimilarityMatrix(userItemMatrix, Cosine, true)
-	MostSimilar(encountered.UniqueUser, simMat, 941, 2)
-	MostSimilar(encountered.UniqueUser, simMat, 356, 3)
+	// fmt.Println("")
+	// fmt.Println("Cosine")
+	// fmt.Println("-----------------------------")
+	// simMat = MakeSimilarityMatrix(userItemMatrix, Cosine, true)
+	// MostSimilar(encountered.UniqueUser, simMat, 941, 2)
+	// MostSimilar(encountered.UniqueUser, simMat, 356, 3)
 
-	fmt.Println("")
-	fmt.Println("Adjusted Cosine")
-	fmt.Println("-----------------------------")
-	simMat = MakeSimilarityMatrix(userItemMatrix, AdjustedCosine, true)
-	MostSimilar(encountered.UniqueUser, simMat, 941, 2)
-	MostSimilar(encountered.UniqueUser, simMat, 356, 3)
+	// fmt.Println("")
+	// fmt.Println("Adjusted Cosine")
+	// fmt.Println("-----------------------------")
+	// simMat = MakeSimilarityMatrix(userItemMatrix, AdjustedCosine, true)
+	// MostSimilar(encountered.UniqueUser, simMat, 941, 2)
+	// MostSimilar(encountered.UniqueUser, simMat, 356, 3)
 
 	fmt.Println("")
 	fmt.Println("+++Item Simlarity+++")
-	fmt.Println("")
-	fmt.Println("Pearson")
-	fmt.Println("-----------------------------")
-	simMat = MakeSimilarityMatrix(userItemMatrix, Pearson, false)
-	MostSimilar(encountered.UniqueItem, simMat, 941, 2)
-	MostSimilar(encountered.UniqueItem, simMat, 1501, 3)
 
-	fmt.Println("")
-	fmt.Println("Cosine")
-	fmt.Println("-----------------------------")
-	simMat = MakeSimilarityMatrix(userItemMatrix, Cosine, false)
-	MostSimilar(encountered.UniqueItem, simMat, 941, 2)
-	MostSimilar(encountered.UniqueItem, simMat, 1501, 3)
+	// fmt.Println("")
+	// fmt.Println("Pearson")
+	// fmt.Println("-----------------------------")
+	// simMat = MakeSimilarityMatrix(userItemMatrix, Pearson, false)
+	// MostSimilar(encountered.UniqueItem, simMat, 941, 2)
+	// MostSimilar(encountered.UniqueItem, simMat, 1501, 3)
+
+	// fmt.Println("")
+	// fmt.Println("Cosine")
+	// fmt.Println("-----------------------------")
+	// simMat = MakeSimilarityMatrix(userItemMatrix, Cosine, false)
+	// MostSimilar(encountered.UniqueItem, simMat, 941, 2)
+	// MostSimilar(encountered.UniqueItem, simMat, 1501, 3)
 
 	fmt.Println("")
 	fmt.Println("Adjusted Cosine")
