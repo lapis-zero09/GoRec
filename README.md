@@ -1,5 +1,6 @@
 # GoRec
 
+blog: https://lapis-zero09.hatenablog.com/entry/2018/05/06/171536
 
 ## Methods
 
