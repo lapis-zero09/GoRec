@@ -1,7 +1,6 @@
 package main
 
 import (
-	"./preprocessing"
 	"encoding/csv"
 	"fmt"
 	"io"
@@ -11,6 +10,8 @@ import (
 	"runtime"
 	"sort"
 	"strconv"
+
+	"github.com/lapis-zero09/GoRec/src/preprocessing"
 )
 
 type Encountered struct {
@@ -220,7 +221,7 @@ func MakeSimilarityMatrix(userItemMatrix [][]int, method func([]int, []int, ...[
 
 	var mean []float64
 	funcName := runtime.FuncForPC(reflect.ValueOf(method).Pointer()).Name()
-	if funcName == "main.AdjustedCosine" {
+	if funcName == "github.com/lapis-zero09/GoRec/src.AdjustedCosine" {
 		if userFlag {
 			mean = make([]float64, len(userItemMatrix[0]))
 			for i := 0; i < len(userItemMatrix[0]); i++ {
@@ -264,25 +265,21 @@ func MakeSimilarityMatrix(userItemMatrix [][]int, method func([]int, []int, ...[
 	return simMat
 }
 
-func MostSimilar(encounteredUnique []int, simMat [][]float64, id, similarSize int) {
+func MostSimilar(encounteredUnique []int, simMat [][]float64, id, similarSize int) map[int]float64 {
 	simVector := simMat[id]
 	sortedSimVector := make([]float64, len(simVector))
 	copy(sortedSimVector, simVector)
 	sort.Sort(sort.Reverse(sort.Float64Slice(sortedSimVector)))
 
-	fmt.Printf("mainId = %d\n", id)
-	fmt.Println("rank\tid\t similarity")
-	fmt.Println("-----------------------------")
-	rank := 1
+	ranker := make(map[int]float64, similarSize)
 	for _, sortedSim := range sortedSimVector[:similarSize] {
 		for i, sim := range simVector {
 			if sim == sortedSim {
-				fmt.Printf(" %d  \t %d \t %f\n", rank, encounteredUnique[i], sim)
-				rank++
+				ranker[encounteredUnique[i]] = sim
 			}
 		}
 	}
-	fmt.Println("-----------------------------")
+	return ranker
 }
 
 func main() {
