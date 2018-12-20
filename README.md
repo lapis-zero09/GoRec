@@ -33,14 +33,14 @@ http://files.grouplens.org/papers/ml-100k.zip
 ### Download Data
 
 ```sh
-$ cd gorec/src/data
-$ sh ./download_data.sh
+$ cd gorec
+$ sh ./scripts/download_data.sh
 ```
 
-### Run App
+### Calc simiralities
 ```sh
-$ cd gorec/src
-$ go run cmd/gorec/main.go
+$ cd gorec
+$ go run cmd/gorec/main.go ./data/ml-100k/u.data
 ```
 
 ### Output
@@ -50,13 +50,3 @@ $ go run cmd/gorec/main.go
 ### change main.go
 
 You can change some parameter for getting similar user/item.
-
-```go
-// user
-simMatrix := MakeSimilarityMatrix(userItemMatrix, method, userFlag=true)
-MostSimilar(encountered.UniqueUser, simMatrix, userId, similarSize)
-
-// item
-simMatrix := MakeSimilarityMatrix(userItemMatrix, method, userFlag=false)
-MostSimilar(encountered.UniqueItem, simMatrix, itemId, similarSize)
-```

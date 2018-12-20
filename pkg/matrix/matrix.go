@@ -8,16 +8,24 @@ import (
 	"sort"
 
 	"github.com/lapis-zero09/GoRec/pkg/cast"
+	"github.com/lapis-zero09/GoRec/pkg/similarity"
 )
 
 type DataFrame [][]int
+type FloatDataFrame [][]float64
 
-type Encountered struct {
+type Uniques struct {
 	UniqueUser []int
 	UniqueItem []int
 }
 
-func CountTrueSize(bool_arr []bool) int {
+type SimBox struct {
+	Data, Matrix     *DataFrame
+	SimilarityMatrix *FloatDataFrame
+	Uniques          *Uniques
+}
+
+func uniqueSize(bool_arr []bool) int {
 	var trueSize int
 	for _, b := range bool_arr {
 		if b {
@@ -27,8 +35,8 @@ func CountTrueSize(bool_arr []bool) int {
 	return trueSize
 }
 
-func (data_df DataFrame) shape() (int, int) {
-	return len(data_df), len(data_df[0])
+func (d DataFrame) shape() (int, int) {
+	return len(d), len(d[0])
 }
 
 func find(arr []int, val int) (int, error) {
@@ -40,90 +48,95 @@ func find(arr []int, val int) (int, error) {
 	return 0, fmt.Errorf("can't find that id in input arr")
 }
 
-func (data_df DataFrame) ReturnUniqueSize(encountered Encountered) ([]int, Encountered) {
-	user := make([]bool, len(data_df))
-	item := make([]bool, len(data_df))
+func (d *DataFrame) TakeCol(colIdx int) ([]int, error) {
+	if colIdx < 0 || len((*d)[0]) < colIdx {
+		return nil, fmt.Errorf("column index is invalid value!")
+	}
+	a := make([]int, len((*d)))
+	for i, val := range *d {
+		a[i] = val[colIdx]
+	}
+	return a, nil
+}
 
-	for _, val := range data_df {
+func (sb *SimBox) Unique() (int, int) {
+	u := &Uniques{}
+	user := make([]bool, len(*sb.Data))
+	item := make([]bool, len(*sb.Data))
+
+	for _, val := range *sb.Data {
 		// user
 		if !user[val[0]] {
 			user[val[0]] = true
-			encountered.UniqueUser = append(encountered.UniqueUser, val[0])
+			u.UniqueUser = append(u.UniqueUser, val[0])
 		}
 
 		// item
 		if !item[val[1]] {
 			item[val[1]] = true
-			encountered.UniqueItem = append(encountered.UniqueItem, val[1])
+			u.UniqueItem = append(u.UniqueItem, val[1])
 		}
 	}
-	sort.Ints(encountered.UniqueUser)
-	sort.Ints(encountered.UniqueItem)
-	uniqueSize := []int{CountTrueSize(user), CountTrueSize(item)}
-	return uniqueSize, encountered
+	sort.Ints(u.UniqueUser)
+	sort.Ints(u.UniqueItem)
+	sb.Uniques = u
+	return uniqueSize(user), uniqueSize(item)
 }
 
-func MakeUserItemMatrix(d [][]int) (Encountered, DataFrame, error) {
-	var data DataFrame = DataFrame(d)
-	encountered := Encountered{}
-	uniqueSize, encountered := data.ReturnUniqueSize(encountered)
-	UniqueUserSize, UniqueItemSize := uniqueSize[0], uniqueSize[1]
+func (sb *SimBox) MakeUserItemMatrix() error {
+	userSize, itemSize := sb.Unique()
+	log.Printf("UserSize: %d", userSize)
+	log.Printf("ItemSize: %d", itemSize)
 
-	df := make(DataFrame, UniqueUserSize)
+	df := make(DataFrame, userSize)
 	for i := range df {
-		df[i] = make([]int, UniqueItemSize)
+		df[i] = make([]int, itemSize)
 	}
 
-	for _, val := range data {
-		user_id, err := find(encountered.UniqueUser, val[0])
+	for _, val := range *sb.Data {
+		userID, err := find(sb.Uniques.UniqueUser, val[0])
 		if err != nil {
-			fmt.Println(err)
+			return err
 		}
-		item_id, err := find(encountered.UniqueItem, val[1])
+		itemID, err := find(sb.Uniques.UniqueItem, val[1])
 		if err != nil {
-			fmt.Println(err)
+			return err
 		}
-		df[user_id][item_id] = val[2]
+		df[userID][itemID] = val[2]
 	}
-	fmt.Println("UserSize\tItemSize")
-	fmt.Println("-----------------------------")
-	l, m := df.shape()
-	fmt.Printf(" %d \t %d \n", l, m)
-	fmt.Println("-----------------------------")
-	return encountered, df, nil
+
+	sb.Matrix = &df
+	return nil
 }
 
-func MakeSimilarityMatrix(userItemMatrix [][]int, method func([]int, []int, ...[]float64) (float64, error), userFlag bool) [][]float64 {
+func (sb *SimBox) MakeSimilarityMatrix(method func([]int, []int, ...[]float64) (float64, error), userFlag bool) error {
 	var size int
 	if userFlag {
-		size = len(userItemMatrix)
+		size, _ = sb.Matrix.shape()
 	} else {
-		size = len(userItemMatrix[0])
+		_, size = sb.Matrix.shape()
 	}
-	simMat := make([][]float64, size)
+
+	simMat := make(FloatDataFrame, size)
 	for i := 0; i < size; i++ {
 		simMat[i] = make([]float64, size)
 	}
 
 	var mean []float64
-	funcName := runtime.FuncForPC(reflect.ValueOf(method).Pointer()).Name()
-	log.Println(funcName)
-	log.Println(method)
-	if funcName == "github.com/lapis-zero09/GoRec/pkg/matrix.AdjustedCosine" {
+	if funcName := runtime.FuncForPC(reflect.ValueOf(method).Pointer()).Name(); funcName == "github.com/lapis-zero09/GoRec/pkg/similarity.AdjustedCosine" {
 		if userFlag {
-			mean = make([]float64, len(userItemMatrix[0]))
-			for i := 0; i < len(userItemMatrix[0]); i++ {
-				tmpVec, err := TakeCol(userItemMatrix, i)
+			mean = make([]float64, len((*sb.Matrix)[0]))
+			for i := 0; i < len((*sb.Matrix)[0]); i++ {
+				tmpVec, err := sb.Matrix.TakeCol(i)
 				if err != nil {
-					fmt.Println(err)
-					break
+					return err
 				}
-				mean[i] = Mean(cast.IntSliceToFloatSlice(tmpVec))
+				mean[i] = similarity.Mean(cast.IntSliceToFloatSlice(tmpVec))
 			}
 		} else {
-			mean = make([]float64, len(userItemMatrix))
-			for i, val := range userItemMatrix {
-				mean[i] = Mean(cast.IntSliceToFloatSlice(val))
+			mean = make([]float64, len((*sb.Matrix)))
+			for i, val := range *sb.Matrix {
+				mean[i] = similarity.Mean(cast.IntSliceToFloatSlice(val))
 			}
 		}
 	}
@@ -132,44 +145,41 @@ func MakeSimilarityMatrix(userItemMatrix [][]int, method func([]int, []int, ...[
 	for i := 0; i < size; i++ {
 		for j := size - 1; j > i; j-- {
 			if userFlag {
-				sim, err = method(userItemMatrix[i], userItemMatrix[j], mean)
+				sim, err = method((*sb.Matrix)[i], (*sb.Matrix)[j], mean)
 			} else {
-				iVec, err := TakeCol(userItemMatrix, i)
-				jVec, err := TakeCol(userItemMatrix, j)
+				iVec, err := sb.Matrix.TakeCol(i)
+				jVec, err := sb.Matrix.TakeCol(j)
 				if err != nil {
-					fmt.Println(err)
-					break
+					return err
 				}
 				sim, err = method(iVec, jVec, mean)
 			}
 			if err != nil {
-				fmt.Println(err)
-				break
+				return err
 			}
 			simMat[i][j] = sim
 			simMat[j][i] = sim
 		}
 	}
-	return simMat
+
+	sb.SimilarityMatrix = &simMat
+	return nil
 }
 
-func MostSimilar(encounteredUnique []int, simMat [][]float64, id, similarSize int) {
-	simVector := simMat[id]
+func (sb *SimBox) MostSimilar(u []int, id, similarSize int) map[int]float64 {
+	simVector := (*sb.SimilarityMatrix)[id]
 	sortedSimVector := make([]float64, len(simVector))
 	copy(sortedSimVector, simVector)
 	sort.Sort(sort.Reverse(sort.Float64Slice(sortedSimVector)))
 
-	fmt.Printf("mainId = %d\n", id)
-	fmt.Println("rank\tid\t similarity")
-	fmt.Println("-----------------------------")
-	rank := 1
+	log.Printf("target ID: %d", id)
+	ranker := make(map[int]float64, similarSize)
 	for _, sortedSim := range sortedSimVector[:similarSize] {
 		for i, sim := range simVector {
 			if sim == sortedSim {
-				fmt.Printf(" %d  \t %d \t %f\n", rank, encounteredUnique[i], sim)
-				rank++
+				ranker[u[i]] = sim
 			}
 		}
 	}
-	fmt.Println("-----------------------------")
+	return ranker
 }

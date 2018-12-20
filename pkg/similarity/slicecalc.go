@@ -1,4 +1,4 @@
-package matrix
+package similarity
 
 import "fmt"
 
@@ -57,15 +57,4 @@ func SliceSub(u, v []float64) ([]float64, error) {
 		res[i] = float64(u[i]) - float64(v[i])
 	}
 	return res, nil
-}
-
-func TakeCol(data [][]int, colIdx int) ([]int, error) {
-	if colIdx < 0 || len(data[0]) < colIdx {
-		return nil, fmt.Errorf("column index is invalid value!")
-	}
-	itemVec := make([]int, len(data))
-	for i, val := range data {
-		itemVec[i] = val[colIdx]
-	}
-	return itemVec, nil
 }

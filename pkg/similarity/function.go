@@ -1,4 +1,4 @@
-package matrix
+package similarity
 
 import (
 	"math"

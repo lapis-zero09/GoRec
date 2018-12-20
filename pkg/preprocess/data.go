@@ -6,10 +6,12 @@ import (
 	"io"
 	"os"
 
+	"github.com/lapis-zero09/GoRec/pkg/matrix"
+
 	"github.com/lapis-zero09/GoRec/pkg/cast"
 )
 
-func ReadFile(filename string) ([][]int, error) {
+func ReadFile(filename string) (*matrix.DataFrame, error) {
 	file, err := os.Open(filename)
 	if err != nil {
 		return nil, fmt.Errorf("file can't be opened from os open")
@@ -18,7 +20,7 @@ func ReadFile(filename string) ([][]int, error) {
 
 	r := csv.NewReader(file)
 	r.Comma = '\t'
-	var data [][]int
+	var data matrix.DataFrame
 	for {
 		record, err := r.Read()
 		if err == io.EOF {
@@ -30,5 +32,5 @@ func ReadFile(filename string) ([][]int, error) {
 		d := cast.StrSliceToIntslice(record[:3])
 		data = append(data, d)
 	}
-	return data, nil
+	return &data, nil
 }

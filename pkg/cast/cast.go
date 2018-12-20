@@ -14,13 +14,13 @@ func IntSliceToFloatSlice(i []int) []float64 {
 }
 
 func StrSliceToIntslice(s []string) []int {
-	intS := make([]int, cap(s))
-	for i, val := range s {
+	i := make([]int, cap(s))
+	for j, val := range s {
 		val, err := strconv.Atoi(val)
 		if err != nil {
 			log.Fatal(err)
 		}
-		intS[i] = val
+		i[j] = val
 	}
-	return intS
+	return i
 }
