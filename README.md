@@ -40,7 +40,7 @@ $ sh ./download_data.sh
 ### Run App
 ```sh
 $ cd gorec/src
-$ go run main.go
+$ go run cmd/gorec/main.go
 ```
 
 ### Output
